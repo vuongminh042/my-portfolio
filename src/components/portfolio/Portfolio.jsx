@@ -1,33 +1,35 @@
-
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import './portfolio.scss'
 import { useRef } from 'react'
 
-
 const items = [
     {
         id: 1,
-        title: "React Commerce",
-        img: "https://images.pexels.com/photos/2061168/pexels-photo-2061168.jpeg?auto=compress&cs=tinysrgb&w=400",
-        desc: "Hello"
+        title: "Furniture Website Interface",
+        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729501963/mkhaufaxq5viojov5ti1.png",
+        desc: "Explore the world of furniture with our website interface! Featuring a modern design, easy navigation, and sharp product images, we bring you an exceptional shopping experience. Find the perfect furniture pieces for your living space with just a few clicks. Don't miss the chance to refresh your home with high-quality products and dedicated customer service!",
+        demoLink: "https://timely-sawine-9814c9.netlify.app/"
     },
     {
         id: 2,
-        title: "Next.js Blog",
-        img: "https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg?auto=compress&cs=tinysrgb&w=400",
-        desc: "Hello"
+        title: "Website Selling Fresh Fruits and Vegetables",
+        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729501963/dtqgcuwrv6cwkbecsnqa.png",
+        desc: "An e-commerce platform offering a wide variety of fresh fruits and vegetables. The website features a user-friendly interface for browsing products, placing orders, and tracking deliveries. It also includes an integrated payment system and options for both local and organic produce.",
+        demoLink: "https://heartfelt-boba-a8c638.netlify.app/"
     },
     {
         id: 3,
-        title: "Vanilla JS Ecommerce",
-        img: "https://images.pexels.com/photos/270632/pexels-photo-270632.jpeg?auto=compress&cs=tinysrgb&w=400",
-        desc: "Hello"
+        title: "Website Selling Electronic Headphones",
+        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729501964/jcacr0bpgwcifpmgryou.png",
+        desc: "An online store specializing in high-quality electronic headphones. The site offers detailed product descriptions, customer reviews, and various models from leading brands. With advanced filtering options, customers can easily find headphones that match their preferences, including wireless and noise-canceling features.",
+        demoLink: "https://sweet-daifuku-202f76.netlify.app/"
     },
     {
         id: 4,
-        title: "Music App",
-        img: "https://images.pexels.com/photos/113850/pexels-photo-113850.jpeg?auto=compress&cs=tinysrgb&w=400",
-        desc: "Hello"
+        title: "Website Selling Electronic Headphones",
+        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729503218/x1xmeoobwwtrrlmbteml.png",
+        desc: "My Portfolio",
+        demoLink: "https://deft-froyo-3083c1.netlify.app/"
     }
 ]
 
@@ -35,23 +37,23 @@ const Single = ({ item }) => {
     const ref = useRef()
     const { scrollYProgress } = useScroll({
         target: ref,
-        // offset: ["start start", "end start"]
     })
 
     const y = useTransform(scrollYProgress, [0, 1], [-300, 300])
-
 
     return (
         <section>
             <div className='container'>
                 <div className='wrapper'>
                     <div className='imageContainer' ref={ref}>
-                        <img src={item.img} alt="" />
+                        <img src={item.img} alt={item.title} />
                     </div>
                     <motion.div className='textContainer' style={{ y }}>
                         <h2>{item.title}</h2>
                         <p>{item.desc}</p>
-                        <button>See Demo</button>
+                        <a href={item.demoLink} target="_blank" rel="noopener noreferrer">
+                            <button>See Demo</button>
+                        </a>
                     </motion.div>
                 </div>
             </div>

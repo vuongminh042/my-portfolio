@@ -15,10 +15,9 @@ const Navbar = () => {
                     Vuong Chi Minh
                 </motion.span>
                 <div className='social'>
-                    <a href="#"><img src="public/facebook.png" alt="" /></a>
-                    <a href="#"><img src="public/instagram.png" alt="" /></a>
-                    <a href="#"><img src="public/tiktok.png" /></a>
-                    <a href="#"><img src="public/github.png" /></a>
+                    <a href="https://www.facebook.com/profile.php?id=100084054154164"><img src="public/facebook.png" alt="" /></a>
+                    <a href="https://www.instagram.com/vuongchi330/"><img src="public/instagram.png" alt="" /></a>
+                    <a href="https://www.tiktok.com/@minh.vng45"><img src="public/tiktok.png" /></a>
                 </div>
             </div>
         </div>
