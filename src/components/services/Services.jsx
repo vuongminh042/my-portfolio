@@ -43,7 +43,7 @@ const Services = () => {
             {/* Title Container */}
             <motion.div className='titleContainer' variants={variants}>
                 <div className='title'>
-                    <img src="public/people.webp" alt="People" />
+                    <img src="https://res.cloudinary.com/davbn16ri/image/upload/v1729504015/portfolio/mfelzsfommxxcstpvoef.webp" alt="People" />
                     <h1>
                         <motion.b whileHover={{ color: 'orange' }}>Specialized</motion.b> Frontend Libraries
                     </h1>

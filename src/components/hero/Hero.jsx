@@ -51,14 +51,14 @@ const Hero = () => {
                         <motion.button variants={textVariants}>See the Latest Works</motion.button>
                         <motion.button variants={textVariants}>Contact Me</motion.button>
                     </motion.div>
-                    <motion.img variants={textVariants} animate="scrollButton" src="public/scroll.png" alt="" />
+                    <motion.img variants={textVariants} animate="scrollButton" src="https://res.cloudinary.com/davbn16ri/image/upload/v1729504014/portfolio/qdzyzvmkua6hesekvs6x.png" alt="" />
                 </motion.div>
             </div>
             <motion.div className='slidingTextContainer' variants={sliderVariants} initial="initial" animate="animate">
                 Vuong Chi Minh
             </motion.div>
             <div className='imageContainer'>
-                <img src="public/Minh.png" alt="" />
+                <img src="https://res.cloudinary.com/davbn16ri/image/upload/v1729504015/portfolio/in9gtlbcxuclrqu4degb.png" alt="" />
             </div>
         </div>
     )
