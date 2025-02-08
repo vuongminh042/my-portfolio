@@ -56,7 +56,7 @@ const Hero = () => {
 
             </motion.div>
             <div className='imageContainer'>
-                <img src="https://res.cloudinary.com/davbn16ri/image/upload/v1729504015/portfolio/in9gtlbcxuclrqu4degb.png" alt="" />
+                <img src="https://res.cloudinary.com/davbn16ri/image/upload/v1738981568/portfolio/qrwhsbpgitcpkjhsdcoq.png" alt="" />
             </div>
         </div>
     )

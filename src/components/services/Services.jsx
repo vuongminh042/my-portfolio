@@ -77,11 +77,12 @@ const Services = () => {
                 </motion.div>
 
                 <motion.div className='box' whileHover={{ color: 'black', background: 'lightgray' }}>
-                    <h2>HTML & CSS & JAVASCRIPT</h2>
-                    <p>HTML, CSS, and JavaScript are the foundational technologies for building web pages. HTML structures the content, CSS styles it, and JavaScript adds interactivity and dynamic behavior, allowing for a rich and engaging user experience.</p>
-                    <motion.button whileHover={{ scale: 1.05 }}><a href="https://www.w3schools.com/">View Here</a></motion.button>
+                    <h2>Laravel</h2>
+                    <p>Laravel is a powerful PHP framework designed for modern web development. It provides an elegant syntax, built-in authentication, robust security, and an extensive ecosystem, making it an excellent choice for building scalable and maintainable web applications.</p>
+                    <motion.button whileHover={{ scale: 1.05 }}>
+                        <a href="https://laravel.com/" target="_blank" rel="noopener noreferrer">View Here</a>
+                    </motion.button>
                 </motion.div>
-
             </motion.div>
         </motion.div>
     )

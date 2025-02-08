@@ -5,32 +5,18 @@ import { useRef } from 'react'
 const items = [
     {
         id: 1,
-        title: "Furniture Website Interface",
-        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729501963/mkhaufaxq5viojov5ti1.png",
-        desc: "Explore the world of furniture with our website interface! Featuring a modern design, easy navigation, and sharp product images, we bring you an exceptional shopping experience. Find the perfect furniture pieces for your living space with just a few clicks. Don't miss the chance to refresh your home with high-quality products and dedicated customer service!",
-        demoLink: "https://timely-sawine-9814c9.netlify.app/"
+        title: "Chatapp Real Time",
+        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1738982064/portfolio/xi7syqiy4isjmlawxejv.png",
+        desc: "A real-time chat application with a sleek and user-friendly interface. Features include instant messaging, media sharing, typing indicators, and online/offline status updates. Designed for seamless communication, this app ensures a smooth chatting experience with real-time synchronization.",
+        demoLink: "https://message-chatapp.onrender.com/"
     },
     {
         id: 2,
-        title: "Website Selling Fresh Fruits and Vegetables",
-        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729501963/dtqgcuwrv6cwkbecsnqa.png",
-        desc: "An e-commerce platform offering a wide variety of fresh fruits and vegetables. The website features a user-friendly interface for browsing products, placing orders, and tracking deliveries. It also includes an integrated payment system and options for both local and organic produce.",
-        demoLink: "https://heartfelt-boba-a8c638.netlify.app/"
+        title: "Server Meme",
+        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1738982226/portfolio/f4nexv8k1htu2tqfhumm.png",
+        desc: "A meme-sharing platform where users can upload, browse, and engage with a variety of memes. The website includes user authentication, meme categorization, and interactive features such as likes and comments. A fun and engaging space for meme lovers to connect and share humor.",
+        demoLink: "https://server-meme.netlify.app/logout"
     },
-    {
-        id: 3,
-        title: "Website Selling Electronic Headphones",
-        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729501964/jcacr0bpgwcifpmgryou.png",
-        desc: "An online store specializing in high-quality electronic headphones. The site offers detailed product descriptions, customer reviews, and various models from leading brands. With advanced filtering options, customers can easily find headphones that match their preferences, including wireless and noise-canceling features.",
-        demoLink: "https://sweet-daifuku-202f76.netlify.app/"
-    },
-    {
-        id: 4,
-        title: "Website Selling Electronic Headphones",
-        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1729503218/x1xmeoobwwtrrlmbteml.png",
-        desc: "My Portfolio",
-        demoLink: "https://deft-froyo-3083c1.netlify.app/"
-    }
 ]
 
 const Single = ({ item }) => {
