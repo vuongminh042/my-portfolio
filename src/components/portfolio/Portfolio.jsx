@@ -17,6 +17,13 @@ const items = [
         desc: "A meme-sharing platform where users can upload, browse, and engage with a variety of memes. The website includes user authentication, meme categorization, and interactive features such as likes and comments. A fun and engaging space for meme lovers to connect and share humor.",
         demoLink: "https://server-meme.netlify.app/logout"
     },
+    {
+        id: 3,
+        title: "Love in the rain",
+        img: "https://res.cloudinary.com/davbn16ri/image/upload/v1740792633/portfolio/i4qvp5bhvedssikh4dhx.png",
+        desc: "Love in the Rain is a space where emotions and memories are captured beneath the rain. It’s not just a platform for sharing but a place to connect kindred souls, romantic stories, and heartfelt moments. With an elegant interface and interactive features, Love in the Rain offers a warm and immersive experience, where every raindrop carries a story and every shower brings a wave of emotions.",
+        demoLink: "https://love-in-the-rain.onrender.com"
+    },
 ]
 
 const Single = ({ item }) => {
