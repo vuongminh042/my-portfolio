@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
+import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import projectRoutes from './routes/projects.js';
@@ -16,14 +17,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const server = http.createServer(app);
-import { Server } from 'socket.io';
+
 
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CLIENT_URL = process.env.CLIENT_URL?.trim();
+const allowedOrigins = CLIENT_URL
+  ? CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : true;
 
 app.use(
   cors({
-    origin: CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -45,7 +49,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 const frontendCandidates = [
-  path.join(__dirname, '../client/dist'),
+  path.join(__dirname, '../frontend/dist'),
   path.join(__dirname, '../../client/dist'),
 ];
 const frontendPath = frontendCandidates.find((dir) => fs.existsSync(dir));
