@@ -17,6 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const server = http.createServer(app);
 import { Server } from 'socket.io';
+
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
@@ -26,6 +27,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json({ limit: '2mb' }));
 
 const uploadsRoot = path.join(__dirname, '..', 'uploads');
@@ -40,6 +42,15 @@ app.use('/api/upload', uploadRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
+});
+
+const frontendPath = path.join(__dirname, '../frontend/dist');
+
+app.use(express.static(frontendPath));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next(); // tránh đè API
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 app.use((err, _req, res, _next) => {
@@ -64,10 +75,12 @@ io.on('connection', (socket) => {
 });
 
 const uri = process.env.MONGODB_URI;
+
 if (!uri) {
   console.error('Thiếu MONGODB_URI trong .env');
   process.exit(1);
 }
+
 if (!process.env.JWT_SECRET) {
   console.error('Thiếu JWT_SECRET trong .env');
   process.exit(1);
@@ -78,8 +91,9 @@ mongoose
   .then(() => {
     const dbName = mongoose.connection.name || '?';
     console.log(`MongoDB: đã kết nối (database: ${dbName})`);
+
     server.listen(PORT, () => {
-      console.log(`API: http://localhost:${PORT}`);
+      console.log(`🚀 App chạy tại: http://localhost:${PORT}`);
     });
   })
   .catch((e) => {
