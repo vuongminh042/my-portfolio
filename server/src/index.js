@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
@@ -43,12 +44,19 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-const frontendPath = path.join(__dirname, '../frontend/dist');
+const frontendCandidates = [
+  path.join(__dirname, '../client/dist'),
+  path.join(__dirname, '../../client/dist'),
+];
+const frontendPath = frontendCandidates.find((dir) => fs.existsSync(dir));
 
-app.use(express.static(frontendPath));
+if (frontendPath) app.use(express.static(frontendPath));
 
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
+  if (!frontendPath) {
+    return res.status(404).json({ message: 'Frontend build not found' });
+  }
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
@@ -85,17 +93,19 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-mongoose
-  .connect(uri)
-  .then(() => {
+const connectMongo = async () => {
+  try {
+    await mongoose.connect(uri);
     const dbName = mongoose.connection.name || '?';
     console.log(`MongoDB: đã kết nối (database: ${dbName})`);
 
-    server.listen(PORT, () => {
-      console.log(`🚀 App chạy tại: http://localhost:${PORT}`);
-    });
-  })
-  .catch((e) => {
-    console.error('MongoDB:', e.message);
-    process.exit(1);
-  });
+  } catch (e) {
+    console.error('Sẽ thử kết nối lại sau 10 giây...');
+    setTimeout(connectMongo, 10_000);
+  }
+};
+
+server.listen(PORT, () => {
+  console.log(`🚀 App chạy tại: http://localhost:${PORT}`);
+  connectMongo();
+});
