@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import { Server } from 'socket.io';
+
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import projectRoutes from './routes/projects.js';
@@ -19,16 +20,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const server = http.createServer(app);
 
-
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL?.trim();
-const allowedOrigins = CLIENT_URL
-  ? CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
-  : true;
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://my-portfolio-8oh4.onrender.com',
+];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
@@ -66,17 +74,16 @@ app.get('*', (req, res, next) => {
 });
 
 app.use((err, _req, res, _next) => {
-  console.error(err);
-  const status = err.status || 500;
-  res.status(status).json({
+  console.error('🔥 Server error:', err);
+  res.status(err.status || 500).json({
     message: err.message || 'Lỗi máy chủ',
   });
 });
 
+
 const io = new Server(server, {
   cors: {
-    // nếu CLIENT_URL rỗng thì cho phép mọi origin tương tự app cors
-    origin: allowedOrigins === true ? '*' : allowedOrigins,
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -84,31 +91,47 @@ const io = new Server(server, {
 app.set('io', io);
 
 io.on('connection', (socket) => {
-  socket.on('disconnect', () => { });
+  console.log('🔌 Socket connected:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('❌ Socket disconnected:', socket.id);
+  });
 });
 
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  console.error('Thiếu MONGODB_URI trong .env');
+  console.error('❌ Thiếu MONGODB_URI');
   process.exit(1);
 }
 
-if (!process.env.JWT_SECRET) {
-  console.error('Thiếu JWT_SECRET trong .env');
-  process.exit(1);
-}
+mongoose.set('bufferCommands', false);
 
-mongoose
-  .connect(uri, { serverSelectionTimeoutMS: 10_000 })
-  .then(() => {
-    const dbName = mongoose.connection.name || '?';
-    console.log(`MongoDB: đã kết nối (database: ${dbName})`);
-    server.listen(PORT, () => {
-      console.log(`🚀 App chạy tại: http://localhost:${PORT}`);
+mongoose.connection.on('connected', () => {
+  console.log('✅ MongoDB connected');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB error:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB disconnected');
+});
+
+async function startServer() {
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
     });
-  })
-  .catch((e) => {
-    console.error('MongoDB:', e.message);
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Server chạy tại: http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Không kết nối được MongoDB:', err.message);
     process.exit(1);
-  });
+  }
+}
+
+startServer();
