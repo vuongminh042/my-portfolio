@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
@@ -74,7 +75,8 @@ app.use((err, _req, res, _next) => {
 
 const io = new Server(server, {
   cors: {
-    origin: CLIENT_URL,
+    // nếu CLIENT_URL rỗng thì cho phép mọi origin tương tự app cors
+    origin: allowedOrigins === true ? '*' : allowedOrigins,
     credentials: true,
   },
 });
@@ -97,19 +99,16 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-const connectMongo = async () => {
-  try {
-    await mongoose.connect(uri);
+mongoose
+  .connect(uri, { serverSelectionTimeoutMS: 10_000 })
+  .then(() => {
     const dbName = mongoose.connection.name || '?';
     console.log(`MongoDB: đã kết nối (database: ${dbName})`);
-
-  } catch (e) {
-    console.error('Sẽ thử kết nối lại sau 10 giây...');
-    setTimeout(connectMongo, 10_000);
-  }
-};
-
-server.listen(PORT, () => {
-  console.log(`🚀 App chạy tại: http://localhost:${PORT}`);
-  connectMongo();
-});
+    server.listen(PORT, () => {
+      console.log(`🚀 App chạy tại: http://localhost:${PORT}`);
+    });
+  })
+  .catch((e) => {
+    console.error('MongoDB:', e.message);
+    process.exit(1);
+  });

@@ -27,7 +27,7 @@ npm install
 npm run dev
 ```
 
-API mặc định: `http://localhost:5000`
+API mặc định: `https://my-portfolio-8oh4.onrender.com/`
 
 ### 3. Frontend
 
