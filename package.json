@@ -2,13 +2,11 @@
   "name": "portfolio",
   "version": "1.0.0",
   "description": "Portfolio (React + Vite + Express + MongoDB)",
-  "main": "backend/index.js",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
-    "build": "npm install --prefix client && npm run build --prefix client",
-    "start": "npm run start --prefix server",
-    "postinstall": "npm install --prefix server"
+    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "start": "npm run start --prefix server"
   },
   "dependencies": {
     "concurrently": "^9.0.0"

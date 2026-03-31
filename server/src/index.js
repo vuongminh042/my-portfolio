@@ -57,11 +57,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-const frontendCandidates = [
-  path.join(__dirname, '../frontend/dist'),
-  path.join(__dirname, '../../client/dist'),
-];
-const frontendPath = frontendCandidates.find((dir) => fs.existsSync(dir));
+const frontendPath = path.resolve(__dirname, '../../client/dist');
 
 if (frontendPath) app.use(express.static(frontendPath));
 
