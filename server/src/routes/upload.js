@@ -1,101 +1,94 @@
-import { Router } from 'express';
-import path from 'path';
-import fs from 'fs';
-import multer from 'multer';
-import { fileURLToPath } from 'url';
-import { authRequired, adminOnly } from '../middleware/auth.js';
-import User from '../models/User.js';
+import { Router } from "express";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { authRequired, adminOnly } from "../middleware/auth.js";
+import User from "../models/User.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const avatarsDir = path.join(__dirname, '..', '..', 'uploads', 'avatars');
-const projectsDir = path.join(__dirname, '..', '..', 'uploads', 'projects');
-
-for (const dir of [avatarsDir, projectsDir]) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 function imageFilter(_req, file, cb) {
   if (/^image\/(jpeg|png|gif|webp)$/i.test(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Chỉ chấp nhận ảnh JPEG, PNG, GIF, WebP'));
+    cb(new Error("Chỉ chấp nhận ảnh JPEG, PNG, GIF, WebP"));
   }
 }
 
-const avatarStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, avatarsDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname) || '.jpg';
-    const safe = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-    cb(null, safe);
-  },
-});
-
-const projectStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, projectsDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname) || '.jpg';
-    const safe = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-    cb(null, safe);
-  },
-});
-
-const uploadAvatar = multer({
-  storage: avatarStorage,
-  limits: { fileSize: 2 * 1024 * 1024 },
-  fileFilter: imageFilter,
-});
-
-const uploadProject = multer({
-  storage: projectStorage,
+const upload = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: imageFilter,
 });
 
 const router = Router();
 
-router.post('/avatar', authRequired, adminOnly, uploadAvatar.single('avatar'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'Không có file' });
-    }
-    const relative = `/uploads/avatars/${req.file.filename}`;
-    const user = await User.findById(req.userId);
-    if (user?.avatar && user.avatar.startsWith('/uploads/avatars/')) {
-      const oldName = path.basename(user.avatar);
-      const oldPath = path.join(avatarsDir, oldName);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
-      }
-    }
-    user.avatar = relative;
-    await user.save();
-    const o = user.toObject();
-    delete o.password;
-    res.json({ avatar: relative, user: o });
-  } catch (e) {
-    next(e);
-  }
-});
-
 router.post(
-  '/project',
+  "/avatar",
   authRequired,
   adminOnly,
-  uploadProject.single('image'),
+  upload.single("avatar"),
   async (req, res, next) => {
     try {
       if (!req.file) {
-        return res.status(400).json({ message: 'Không có file' });
+        return res.status(400).json({ message: "Không có file" });
       }
-      const relative = `/uploads/projects/${req.file.filename}`;
-      res.json({ image: relative });
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "avatars",
+            public_id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          },
+        );
+        stream.end(req.file.buffer);
+      });
+      const user = await User.findById(req.userId);
+      user.avatar = result.secure_url;
+      await user.save();
+      const o = user.toObject();
+      delete o.password;
+      res.json({ avatar: result.secure_url, user: o });
     } catch (e) {
       next(e);
     }
-  }
+  },
+);
+
+router.post(
+  "/project",
+  authRequired,
+  adminOnly,
+  upload.single("image"),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "Không có file" });
+      }
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "projects",
+            public_id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          },
+        );
+        stream.end(req.file.buffer);
+      });
+      res.json({ image: result.secure_url });
+    } catch (e) {
+      next(e);
+    }
+  },
 );
 
 export default router;

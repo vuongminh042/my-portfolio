@@ -1,19 +1,19 @@
-import 'dotenv/config';
-import express from 'express';
-import http from 'http';
-import cors from 'cors';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import mongoose from 'mongoose';
-import { Server } from 'socket.io';
+import "dotenv/config";
+import express from "express";
+import http from "http";
+import cors from "cors";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import { Server } from "socket.io";
 
-import authRoutes from './routes/auth.js';
-import profileRoutes from './routes/profile.js';
-import projectRoutes from './routes/projects.js';
-import skillRoutes from './routes/skills.js';
-import messageRoutes from './routes/messages.js';
-import uploadRoutes from './routes/upload.js';
+import authRoutes from "./routes/auth.js";
+import profileRoutes from "./routes/profile.js";
+import projectRoutes from "./routes/projects.js";
+import skillRoutes from "./routes/skills.js";
+import messageRoutes from "./routes/messages.js";
+import uploadRoutes from "./routes/upload.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,8 +22,8 @@ const server = http.createServer(app);
 
 const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://my-portfolio-8oh4.onrender.com',
+  "http://localhost:5173",
+  "https://my-portfolio-8oh4.onrender.com",
 ];
 
 app.use(
@@ -34,48 +34,44 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
-  })
+  }),
 );
 
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: "2mb" }));
 
-const uploadsRoot = path.join(__dirname, '..', 'uploads');
-app.use('/uploads', express.static(uploadsRoot));
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/skills", skillRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/upload", uploadRoutes);
 
-app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/skills', skillRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/upload', uploadRoutes);
-
-app.get('/api/health', (_req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-const frontendPath = path.resolve(__dirname, '../../client/dist');
+const frontendPath = path.resolve(__dirname, "../../client/dist");
 
 if (frontendPath) app.use(express.static(frontendPath));
 
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api")) return next();
   if (!frontendPath) {
-    return res.status(404).json({ message: 'Frontend build not found' });
+    return res.status(404).json({ message: "Frontend build not found" });
   }
-  res.sendFile(path.join(frontendPath, 'index.html'));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 app.use((err, _req, res, _next) => {
-  console.error('🔥 Server error:', err);
+  console.error("🔥 Server error:", err);
   res.status(err.status || 500).json({
-    message: err.message || 'Lỗi máy chủ',
+    message: err.message || "Lỗi máy chủ",
   });
 });
-
 
 const io = new Server(server, {
   cors: {
@@ -84,35 +80,35 @@ const io = new Server(server, {
   },
 });
 
-app.set('io', io);
+app.set("io", io);
 
-io.on('connection', (socket) => {
-  console.log('🔌 Socket connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("🔌 Socket connected:", socket.id);
 
-  socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected:', socket.id);
+  socket.on("disconnect", () => {
+    console.log("❌ Socket disconnected:", socket.id);
   });
 });
 
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  console.error('❌ Thiếu MONGODB_URI');
+  console.error("❌ Thiếu MONGODB_URI");
   process.exit(1);
 }
 
-mongoose.set('bufferCommands', false);
+mongoose.set("bufferCommands", false);
 
-mongoose.connection.on('connected', () => {
-  console.log('✅ MongoDB connected');
+mongoose.connection.on("connected", () => {
+  console.log("✅ MongoDB connected");
 });
 
-mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB error:', err.message);
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB error:", err.message);
 });
 
-mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️ MongoDB disconnected');
+mongoose.connection.on("disconnected", () => {
+  console.warn("⚠️ MongoDB disconnected");
 });
 
 async function startServer() {
@@ -125,7 +121,7 @@ async function startServer() {
       console.log(`🚀 Server chạy tại: http://localhost:${PORT}`);
     });
   } catch (err) {
-    console.error('❌ Không kết nối được MongoDB:', err.message);
+    console.error("❌ Không kết nối được MongoDB:", err.message);
     process.exit(1);
   }
 }
