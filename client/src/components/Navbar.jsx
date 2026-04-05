@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useInbox } from '../context/InboxContext';
 import ThemeToggle from './ThemeToggle';
 
 const links = [
@@ -14,6 +15,7 @@ const links = [
 export default function Navbar() {
   const { pathname } = useLocation();
   const { user, isAdmin, logout } = useAuth();
+  const { unreadReplies } = useInbox();
   const onHome = pathname === '/';
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef(null);
@@ -81,6 +83,11 @@ export default function Navbar() {
                 aria-expanded={accountOpen}
                 className="text-sm px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/5 transition-colors inline-flex items-center gap-2"
               >
+                {unreadReplies > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">
+                    {unreadReplies}
+                  </span>
+                )}
                 Thông tin tài khoản
                 <span className="text-xs opacity-70">{accountOpen ? '▲' : '▼'}</span>
               </button>
@@ -103,6 +110,19 @@ export default function Navbar() {
                   </div>
 
                   <div className="p-3 space-y-2">
+                    <Link
+                      to="/messages"
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:bg-white/10"
+                    >
+                      <span>Tin nhắn</span>
+                      {unreadReplies > 0 && (
+                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+                          {unreadReplies}
+                        </span>
+                      )}
+                    </Link>
+
                     {isAdmin && (
                       <Link
                         to="/admin"

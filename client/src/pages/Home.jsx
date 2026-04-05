@@ -8,6 +8,7 @@ import SkillsSection from '../components/SkillsSection';
 import ProjectsSection from '../components/ProjectsSection';
 import ContactSection from '../components/ContactSection';
 import Footer from '../components/Footer';
+import BackgroundMusic from '../components/BackgroundMusic';
 
 export default function Home() {
   const [profile, setProfile] = useState(null);
@@ -59,6 +60,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Navbar />
+      <BackgroundMusic enabledByAdmin={profile ? profile.backgroundMusicEnabled !== false : false} />
       {loadError && (
         <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-lg glass rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300 border border-amber-400/50 dark:border-amber-500/30">
           Không kết nối được API ({loadError}). Chạy server và MongoDB, hoặc kiểm tra proxy.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api, { assetUrl } from '../../api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const empty = {
   title: '',
@@ -18,6 +19,8 @@ export default function ProjectsAdmin() {
   const [form, setForm] = useState(empty);
   const [msg, setMsg] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [confirmProject, setConfirmProject] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
 
   async function load() {
     const data = await api.get('/api/projects');
@@ -79,13 +82,17 @@ export default function ProjectsAdmin() {
     }
   }
 
-  async function remove(id) {
-    if (!confirm('Xóa dự án này?')) return;
+  async function confirmRemoveProject() {
+    if (!confirmProject) return;
     try {
-      await api.delete(`/api/projects/${id}`);
+      setRemovingId(confirmProject._id);
+      await api.delete(`/api/projects/${confirmProject._id}`);
+      setConfirmProject(null);
       await load();
     } catch (err) {
       setMsg({ type: 'err', text: err.message });
+    } finally {
+      setRemovingId(null);
     }
   }
 
@@ -274,7 +281,7 @@ export default function ProjectsAdmin() {
               </button>
               <button
                 type="button"
-                onClick={() => remove(p._id)}
+                onClick={() => setConfirmProject(p)}
                 className="px-4 py-2 rounded-lg bg-red-500/15 text-sm text-red-400"
               >
                 Xóa
@@ -286,6 +293,48 @@ export default function ProjectsAdmin() {
           <p className="text-slate-500 text-sm">Chưa có dự án — nhấn &quot;Thêm dự án&quot;.</p>
         )}
       </div>
+
+      <ConfirmModal
+        open={Boolean(confirmProject)}
+        title="Xóa dự án khỏi portfolio?"
+        description="Nếu xác nhận, dự án này sẽ bị gỡ khỏi trang chủ và khỏi khu vực quản trị."
+        details={
+          confirmProject && (
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-24 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-200 dark:border-white/10 dark:bg-white/5">
+                {confirmProject.image ? (
+                  <img
+                    src={assetUrl(confirmProject.image)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-slate-500">
+                    No img
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-medium text-slate-900 dark:text-white">
+                  {confirmProject.title}
+                </p>
+                <p className="mt-1 max-h-11 overflow-hidden text-sm text-slate-600 dark:text-slate-300">
+                  {confirmProject.description || 'Chưa có mô tả'}
+                </p>
+              </div>
+            </div>
+          )
+        }
+        confirmLabel="Xóa dự án"
+        cancelLabel="Giữ lại"
+        onCancel={() => {
+          if (!removingId) setConfirmProject(null);
+        }}
+        onConfirm={() => {
+          confirmRemoveProject().catch(() => {});
+        }}
+        loading={Boolean(confirmProject && removingId === confirmProject._id)}
+      />
     </div>
   );
 }

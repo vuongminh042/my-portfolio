@@ -10,6 +10,7 @@ export default function ProfileAdmin() {
     facebook: '',
     tiktok: '',
     avatar: '',
+    backgroundMusicEnabled: true,
   });
   const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,7 @@ export default function ProfileAdmin() {
           facebook: me.facebook || '',
           tiktok: me.tiktok || '',
           avatar: me.avatar || '',
+          backgroundMusicEnabled: me.backgroundMusicEnabled ?? true,
         });
       } catch {
         setMsg({ type: 'err', text: 'Không tải được hồ sơ' });
@@ -47,6 +49,7 @@ export default function ProfileAdmin() {
         bio: form.bio,
         facebook: form.facebook,
         tiktok: form.tiktok,
+        backgroundMusicEnabled: form.backgroundMusicEnabled,
       });
       setMsg({ type: 'ok', text: 'Đã lưu hồ sơ.' });
     } catch (err) {
@@ -154,6 +157,41 @@ export default function ProfileAdmin() {
             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 dark:bg-surface-900/80 dark:border-white/10 dark:text-white"
           />
         </label>
+        <div className="rounded-2xl border border-slate-200/90 bg-white/70 p-4 dark:border-white/10 dark:bg-white/5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs text-slate-500 uppercase">Cài đặt trang chủ</p>
+              <h2 className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+                Nhạc nền
+              </h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                Phát nhạc ambient nhẹ ở trang chủ. Người xem vẫn có thể tự bật hoặc tắt.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.backgroundMusicEnabled}
+              onClick={() =>
+                setForm((current) => ({
+                  ...current,
+                  backgroundMusicEnabled: !current.backgroundMusicEnabled,
+                }))
+              }
+              className={`inline-flex h-7 w-14 items-center rounded-full border transition-colors ${
+                form.backgroundMusicEnabled
+                  ? 'border-cyan-500/70 bg-gradient-to-r from-cyan-500 to-violet-600'
+                  : 'border-slate-300 bg-slate-300/80 dark:border-white/10 dark:bg-white/10'
+              }`}
+            >
+              <span
+                className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                  form.backgroundMusicEnabled ? 'translate-x-8' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
         {msg && (
           <p className={msg.type === 'ok' ? 'text-emerald-400 text-sm' : 'text-red-400 text-sm'}>
             {msg.text}

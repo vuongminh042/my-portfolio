@@ -10,6 +10,16 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const hasCloudinaryConfig = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET,
+);
+
+if (!hasCloudinaryConfig) {
+  console.warn("⚠️ Thiếu cấu hình Cloudinary, route upload sẽ không hoạt động.");
+}
+
 function imageFilter(_req, file, cb) {
   if (/^image\/(jpeg|png|gif|webp)$/i.test(file.mimetype)) {
     cb(null, true);
@@ -33,6 +43,9 @@ router.post(
   upload.single("avatar"),
   async (req, res, next) => {
     try {
+      if (!hasCloudinaryConfig) {
+        return res.status(500).json({ message: "Thiếu cấu hình Cloudinary trên server" });
+      }
       if (!req.file) {
         return res.status(400).json({ message: "Không có file" });
       }
@@ -68,6 +81,9 @@ router.post(
   upload.single("image"),
   async (req, res, next) => {
     try {
+      if (!hasCloudinaryConfig) {
+        return res.status(500).json({ message: "Thiếu cấu hình Cloudinary trên server" });
+      }
       if (!req.file) {
         return res.status(400).json({ message: "Không có file" });
       }

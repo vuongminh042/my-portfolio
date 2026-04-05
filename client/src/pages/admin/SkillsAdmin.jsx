@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const empty = { name: '', level: 80, category: 'frontend', order: 0 };
 
@@ -8,6 +9,8 @@ export default function SkillsAdmin() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(empty);
   const [msg, setMsg] = useState(null);
+  const [confirmSkill, setConfirmSkill] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
 
   async function load() {
     const data = await api.get('/api/skills');
@@ -58,13 +61,17 @@ export default function SkillsAdmin() {
     }
   }
 
-  async function remove(id) {
-    if (!confirm('Xóa kỹ năng này?')) return;
+  async function confirmRemoveSkill() {
+    if (!confirmSkill) return;
     try {
-      await api.delete(`/api/skills/${id}`);
+      setRemovingId(confirmSkill._id);
+      await api.delete(`/api/skills/${confirmSkill._id}`);
+      setConfirmSkill(null);
       await load();
     } catch (err) {
       setMsg({ type: 'err', text: err.message });
+    } finally {
+      setRemovingId(null);
     }
   }
 
@@ -177,7 +184,7 @@ export default function SkillsAdmin() {
               </button>
               <button
                 type="button"
-                onClick={() => remove(s._id)}
+                onClick={() => setConfirmSkill(s)}
                 className="px-3 py-1.5 rounded-lg bg-red-500/15 text-sm text-red-400"
               >
                 Xóa
@@ -186,6 +193,31 @@ export default function SkillsAdmin() {
           </div>
         ))}
       </div>
+
+      <ConfirmModal
+        open={Boolean(confirmSkill)}
+        title="Xóa kỹ năng này?"
+        description="Kỹ năng sẽ biến mất khỏi trang chủ và khỏi danh sách quản trị ngay sau khi xác nhận."
+        details={
+          confirmSkill && (
+            <div className="space-y-2">
+              <p className="font-medium text-slate-900 dark:text-white">{confirmSkill.name}</p>
+              <p className="text-slate-600 dark:text-slate-300">
+                {confirmSkill.level}% · {confirmSkill.category}
+              </p>
+            </div>
+          )
+        }
+        confirmLabel="Xóa kỹ năng"
+        cancelLabel="Hủy"
+        onCancel={() => {
+          if (!removingId) setConfirmSkill(null);
+        }}
+        onConfirm={() => {
+          confirmRemoveSkill().catch(() => {});
+        }}
+        loading={Boolean(confirmSkill && removingId === confirmSkill._id)}
+      />
     </div>
   );
 }

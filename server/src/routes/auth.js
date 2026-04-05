@@ -37,6 +37,11 @@ router.post('/register', async (req, res, next) => {
       role,
     });
 
+    const io = req.app.get('io');
+    if (io) {
+      io.to('admins').emit('admin:updated', { type: 'users' });
+    }
+
     const token = signToken(user);
     res.status(201).json({
       token,
@@ -50,6 +55,7 @@ router.post('/register', async (req, res, next) => {
         role: user.role,
         facebook: user.facebook,
         tiktok: user.tiktok,
+        backgroundMusicEnabled: user.backgroundMusicEnabled,
       },
     });
   } catch (e) {
@@ -80,6 +86,7 @@ router.post('/login', async (req, res, next) => {
         role: user.role,
         facebook: user.facebook,
         tiktok: user.tiktok,
+        backgroundMusicEnabled: user.backgroundMusicEnabled,
       },
     });
   } catch (e) {
@@ -103,6 +110,7 @@ router.get('/me', authRequired, async (req, res, next) => {
       role: user.role,
       facebook: user.facebook,
       tiktok: user.tiktok,
+      backgroundMusicEnabled: user.backgroundMusicEnabled,
     });
   } catch (e) {
     next(e);

@@ -1,12 +1,25 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
+import { useInbox } from '../context/InboxContext';
 import SectionTitle from './SectionTitle';
 
 export default function ContactSection() {
+  const { user } = useAuth();
+  const { refreshInbox } = useInbox();
   const [form, setForm] = useState({ name: '', email: '', subject: '', body: '' });
   const [status, setStatus] = useState(null);
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setForm((current) => ({
+      ...current,
+      name: user.name || current.name,
+      email: user.email || current.email,
+    }));
+  }, [user]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -15,7 +28,13 @@ export default function ContactSection() {
     try {
       await api.post('/api/messages', form);
       setStatus({ type: 'ok', text: 'Đã gửi — mình sẽ phản hồi sớm.' });
-      setForm({ name: '', email: '', subject: '', body: '' });
+      refreshInbox().catch(() => {});
+      setForm((current) => ({
+        name: user?.name || current.name,
+        email: user?.email || current.email,
+        subject: '',
+        body: '',
+      }));
     } catch (err) {
       setStatus({ type: 'err', text: err.message || 'Gửi thất bại' });
     } finally {
@@ -45,6 +64,7 @@ export default function ContactSection() {
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
+                disabled={Boolean(user)}
                 className="mt-1 w-full rounded-xl border px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 dark:bg-surface-900/80 dark:border-white/10 dark:text-white dark:focus:ring-accent/50 bg-white border-slate-200"
               />
             </label>
@@ -55,10 +75,17 @@ export default function ContactSection() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                disabled={Boolean(user)}
                 className="mt-1 w-full rounded-xl border px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 dark:bg-surface-900/80 dark:border-white/10 dark:text-white dark:focus:ring-accent/50 bg-white border-slate-200"
               />
             </label>
           </div>
+          {user && (
+            <p className="text-xs text-cyan-700 dark:text-cyan-300">
+              Bạn đang gửi bằng tài khoản đã đăng nhập. Tin nhắn sẽ xuất hiện trong mục Tin nhắn
+              của bạn.
+            </p>
+          )}
           <label className="block">
             <span className="text-xs text-slate-500 uppercase tracking-wider">Chủ đề</span>
             <input

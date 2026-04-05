@@ -6,6 +6,7 @@ import ThemeToggle from '../../components/ThemeToggle';
 const nav = [
   { to: '/admin', end: true, label: 'Tổng quan' },
   { to: '/admin/profile', label: 'Hồ sơ & Avatar' },
+  { to: '/admin/users', label: 'Người dùng' },
   { to: '/admin/projects', label: 'Dự án' },
   { to: '/admin/skills', label: 'Kỹ năng' },
   { to: '/admin/messages', label: 'Tin nhắn' },

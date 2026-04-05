@@ -15,6 +15,7 @@ router.get('/public', async (_req, res, next) => {
         avatar: '',
         facebook: '',
         tiktok: '',
+        backgroundMusicEnabled: true,
       });
     }
     res.json({
@@ -24,6 +25,7 @@ router.get('/public', async (_req, res, next) => {
       avatar: admin.avatar,
       facebook: admin.facebook,
       tiktok: admin.tiktok,
+      backgroundMusicEnabled: admin.backgroundMusicEnabled ?? true,
     });
   } catch (e) {
     next(e);
@@ -32,7 +34,15 @@ router.get('/public', async (_req, res, next) => {
 
 router.patch('/', authRequired, adminOnly, async (req, res, next) => {
   try {
-    const allowed = ['name', 'title', 'bio', 'facebook', 'tiktok', 'avatar'];
+    const allowed = [
+      'name',
+      'title',
+      'bio',
+      'facebook',
+      'tiktok',
+      'avatar',
+      'backgroundMusicEnabled',
+    ];
     const updates = {};
     for (const k of allowed) {
       if (req.body[k] !== undefined) updates[k] = req.body[k];
@@ -60,6 +70,7 @@ router.patch('/', authRequired, adminOnly, async (req, res, next) => {
       role: user.role,
       facebook: user.facebook,
       tiktok: user.tiktok,
+      backgroundMusicEnabled: user.backgroundMusicEnabled,
     });
   } catch (e) {
     next(e);

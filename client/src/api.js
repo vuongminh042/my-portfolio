@@ -1,4 +1,31 @@
-const base = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+function normalizeBaseUrl(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\/$/, '')
+    .replace(/\/api$/i, '');
+}
+
+const envBase = normalizeBaseUrl(import.meta.env.VITE_API_URL);
+const isLocalDev =
+  import.meta.env.DEV &&
+  typeof window !== 'undefined' &&
+  ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const base = isLocalDev ? '' : envBase;
+
+function normalizeErrorMessage(text, res) {
+  if (!text) return res.statusText;
+
+  const preMatch = text.match(/<pre>(.*?)<\/pre>/is);
+  if (preMatch?.[1]) {
+    return preMatch[1].trim();
+  }
+
+  if (/<(?:!DOCTYPE|html|body|head)\b/i.test(text)) {
+    return `API trả về HTML thay vì JSON (${res.status})`;
+  }
+
+  return text;
+}
 
 export function assetUrl(path) {
   if (!path) return '';
@@ -31,7 +58,7 @@ async function request(path, options = {}) {
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
-    data = { message: text };
+    data = { message: normalizeErrorMessage(text, res) };
   }
 
   if (!res.ok) {

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import api from '../api';
+import { setSocketAuth } from '../realtime';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,7 @@ export function AuthProvider({ children }) {
 
   const loadMe = useCallback(async () => {
     const token = localStorage.getItem('token');
+    setSocketAuth(token);
     if (!token) {
       setUser(null);
       setLoading(false);
@@ -19,6 +21,7 @@ export function AuthProvider({ children }) {
       setUser(me);
     } catch {
       localStorage.removeItem('token');
+      setSocketAuth(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -32,6 +35,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const data = await api.post('/api/auth/login', { email, password });
     localStorage.setItem('token', data.token);
+    setSocketAuth(data.token);
     setUser(data.user);
     return data.user;
   };
@@ -39,12 +43,14 @@ export function AuthProvider({ children }) {
   const register = async (email, password, name) => {
     const data = await api.post('/api/auth/register', { email, password, name });
     localStorage.setItem('token', data.token);
+    setSocketAuth(data.token);
     setUser(data.user);
     return data.user;
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    setSocketAuth(null);
     setUser(null);
   };
 
