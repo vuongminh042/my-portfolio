@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useChatSummary } from '../../context/ChatContext';
 import ThemeToggle from '../../components/ThemeToggle';
 
 const nav = [
@@ -10,10 +11,13 @@ const nav = [
   { to: '/admin/projects', label: 'Dự án' },
   { to: '/admin/skills', label: 'Kỹ năng' },
   { to: '/admin/messages', label: 'Tin nhắn' },
+  { to: '/admin/chat', label: 'Chat realtime' },
+  { to: '/admin/chats', label: 'Quản lý chat' },
 ];
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const { adminUnreadThreads } = useChatSummary();
   const navigate = useNavigate();
 
   return (
@@ -40,7 +44,14 @@ export default function AdminLayout() {
                 }`
               }
             >
-              {item.label}
+              <span className="flex items-center justify-between gap-3">
+                <span>{item.label}</span>
+                {item.to === '/admin/chat' && adminUnreadThreads > 0 && (
+                  <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+                    {adminUnreadThreads}
+                  </span>
+                )}
+              </span>
             </NavLink>
           ))}
         </nav>
@@ -93,7 +104,14 @@ export default function AdminLayout() {
                 }`
               }
             >
-              {item.label}
+              <span className="flex items-center gap-2">
+                <span>{item.label}</span>
+                {item.to === '/admin/chat' && adminUnreadThreads > 0 && (
+                  <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    {adminUnreadThreads}
+                  </span>
+                )}
+              </span>
             </NavLink>
           ))}
         </div>

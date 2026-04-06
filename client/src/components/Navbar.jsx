@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useChatSummary } from '../context/ChatContext';
 import { useInbox } from '../context/InboxContext';
 import ThemeToggle from './ThemeToggle';
 
@@ -15,6 +16,7 @@ const links = [
 export default function Navbar() {
   const { pathname } = useLocation();
   const { user, isAdmin, logout } = useAuth();
+  const { userUnreadCount, adminUnreadThreads } = useChatSummary();
   const { unreadReplies } = useInbox();
   const onHome = pathname === '/';
   const [accountOpen, setAccountOpen] = useState(false);
@@ -119,6 +121,19 @@ export default function Navbar() {
                       {unreadReplies > 0 && (
                         <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
                           {unreadReplies}
+                        </span>
+                      )}
+                    </Link>
+
+                    <Link
+                      to={isAdmin ? '/admin/chat' : '/chat'}
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-200/80 dark:text-slate-300 dark:hover:bg-white/10"
+                    >
+                      <span>{isAdmin ? 'Chat realtime' : 'Chat với quản trị viên'}</span>
+                      {(isAdmin ? adminUnreadThreads : userUnreadCount) > 0 && (
+                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+                          {isAdmin ? adminUnreadThreads : userUnreadCount}
                         </span>
                       )}
                     </Link>

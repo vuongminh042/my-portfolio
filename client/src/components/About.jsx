@@ -5,7 +5,7 @@ export default function About({ profile }) {
   const name = profile?.name || 'Developer';
   const bio =
     profile?.bio ||
-    'Mình tập trung vào React, TypeScript, animation và kiến trúc component có thể mở rộng. Trang này dùng MERN — bạn có thể quản trị nội dung từ panel Admin.';
+    '';
 
   return (
     <section id="about" className="py-24 px-4">

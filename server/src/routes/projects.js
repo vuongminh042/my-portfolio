@@ -4,6 +4,57 @@ import { authRequired, adminOnly } from '../middleware/auth.js';
 
 const router = Router();
 
+function normalizeText(value) {
+  return (typeof value === 'string' ? value : '').trim();
+}
+
+function normalizeBoolean(value, fallback = false) {
+  if (typeof value === 'boolean') return value;
+
+  const normalized = normalizeText(value).toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+
+  return fallback;
+}
+
+function normalizeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function pickProjectPayload(body = {}, allowPartial = false) {
+  const payload = {};
+
+  if (!allowPartial || body.title !== undefined) {
+    payload.title = normalizeText(body.title);
+  }
+  if (!allowPartial || body.description !== undefined) {
+    payload.description = normalizeText(body.description);
+  }
+  if (!allowPartial || body.image !== undefined) {
+    payload.image = normalizeText(body.image);
+  }
+  if (!allowPartial || body.tech !== undefined) {
+    const rawTech = Array.isArray(body.tech) ? body.tech : body.tech !== undefined ? [body.tech] : [];
+    payload.tech = rawTech.map(normalizeText).filter(Boolean);
+  }
+  if (!allowPartial || body.liveUrl !== undefined) {
+    payload.liveUrl = normalizeText(body.liveUrl);
+  }
+  if (!allowPartial || body.repoUrl !== undefined) {
+    payload.repoUrl = normalizeText(body.repoUrl);
+  }
+  if (!allowPartial || body.featured !== undefined) {
+    payload.featured = normalizeBoolean(body.featured, false);
+  }
+  if (!allowPartial || body.order !== undefined) {
+    payload.order = normalizeNumber(body.order, 0);
+  }
+
+  return payload;
+}
+
 router.get('/', async (_req, res, next) => {
   try {
     const list = await Project.find().sort({ order: 1, createdAt: -1 });
@@ -15,7 +66,7 @@ router.get('/', async (_req, res, next) => {
 
 router.post('/', authRequired, adminOnly, async (req, res, next) => {
   try {
-    const p = await Project.create(req.body);
+    const p = await Project.create(pickProjectPayload(req.body));
 
     const io = req.app.get('io');
     if (io) {
@@ -30,7 +81,7 @@ router.post('/', authRequired, adminOnly, async (req, res, next) => {
 
 router.patch('/:id', authRequired, adminOnly, async (req, res, next) => {
   try {
-    const p = await Project.findByIdAndUpdate(req.params.id, req.body, {
+    const p = await Project.findByIdAndUpdate(req.params.id, pickProjectPayload(req.body, true), {
       new: true,
       runValidators: true,
     });

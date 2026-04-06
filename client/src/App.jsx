@@ -11,6 +11,9 @@ import SkillsAdmin from './pages/admin/SkillsAdmin';
 import MessagesAdmin from './pages/admin/MessagesAdmin';
 import UsersAdmin from './pages/admin/UsersAdmin';
 import UserMessages from './pages/UserMessages';
+import Chat from './pages/Chat';
+import ChatAdmin from './pages/admin/ChatAdmin';
+import ChatsAdmin from './pages/admin/ChatsAdmin';
 
 function AdminGuard({ children }) {
   const { user, loading } = useAuth();
@@ -57,6 +60,14 @@ export default function App() {
         }
       />
       <Route
+        path="/chat"
+        element={
+          <AuthGuard>
+            <Chat />
+          </AuthGuard>
+        }
+      />
+      <Route
         path="/admin"
         element={
           <AdminGuard>
@@ -70,6 +81,8 @@ export default function App() {
         <Route path="projects" element={<ProjectsAdmin />} />
         <Route path="skills" element={<SkillsAdmin />} />
         <Route path="messages" element={<MessagesAdmin />} />
+        <Route path="chat" element={<ChatAdmin />} />
+        <Route path="chats" element={<ChatsAdmin />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

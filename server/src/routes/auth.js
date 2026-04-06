@@ -6,6 +6,16 @@ import { authRequired } from '../middleware/auth.js';
 
 const router = Router();
 
+function normalizeEmail(value) {
+  return (typeof value === 'string' ? value : '')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeName(value) {
+  return (typeof value === 'string' ? value : '').trim();
+}
+
 function signToken(user) {
   return jwt.sign(
     { sub: user._id.toString(), role: user.role },
@@ -16,24 +26,28 @@ function signToken(user) {
 
 router.post('/register', async (req, res, next) => {
   try {
-    const { email, password, name } = req.body;
+    const email = normalizeEmail(req.body?.email);
+    const password = String(req.body?.password || '');
+    const name = normalizeName(req.body?.name);
     if (!email || !password) {
       return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
     }
-    const exists = await User.findOne({ email: email.toLowerCase() });
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    }
+    const exists = await User.findOne({ email });
     if (exists) {
       return res.status(400).json({ message: 'Email đã được sử dụng' });
     }
     const hash = await bcrypt.hash(password, 12);
-    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase();
+    const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL);
     const isFirst = (await User.countDocuments()) === 0;
-    const role =
-      isFirst || (adminEmail && email.toLowerCase() === adminEmail) ? 'admin' : 'user';
+    const role = isFirst || (adminEmail && email === adminEmail) ? 'admin' : 'user';
 
     const user = await User.create({
-      email: email.toLowerCase(),
+      email,
       password: hash,
-      name: name || '',
+      name,
       role,
     });
 
@@ -65,11 +79,12 @@ router.post('/register', async (req, res, next) => {
 
 router.post('/login', async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body?.email);
+    const password = String(req.body?.password || '');
     if (!email || !password) {
       return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
     }
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email }).select('+password');
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: 'Sai email hoặc mật khẩu' });
     }

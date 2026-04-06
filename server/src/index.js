@@ -8,12 +8,17 @@ import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
+import User from "./models/User.js";
+import ChatMessage from "./models/ChatMessage.js";
+import ChatThread from "./models/ChatThread.js";
+import { emitChatUpdate, getThreadRoom } from "./lib/chatRealtime.js";
 
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
 import projectRoutes from "./routes/projects.js";
 import skillRoutes from "./routes/skills.js";
 import messageRoutes from "./routes/messages.js";
+import chatRoutes from "./routes/chat.js";
 import adminRoutes from "./routes/admin.js";
 import uploadRoutes from "./routes/upload.js";
 
@@ -79,6 +84,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 
@@ -124,18 +130,120 @@ const io = new Server(server, {
 
 app.set("io", io);
 
-io.on("connection", (socket) => {
+async function markDeliveredForUser(ioServer, userId) {
+  const thread = await ChatThread.findOne({ user: userId }).select("_id user").lean();
+  if (!thread) return;
+
+  const pending = await ChatMessage.find({
+    thread: thread._id,
+    senderRole: "admin",
+    deliveredToUser: { $ne: true },
+  })
+    .select("_id")
+    .lean();
+
+  if (!pending.length) return;
+
+  const ids = pending.map((message) => message._id);
+
+  await ChatMessage.updateMany(
+    { _id: { $in: ids } },
+    {
+      $set: {
+        deliveredToUser: true,
+      },
+    },
+  );
+
+  emitChatUpdate(ioServer, {
+    threadId: thread._id,
+    userId: thread.user,
+    payload: {
+      type: "delivery",
+      recipientRole: "user",
+      messageIds: ids.map((id) => id.toString()),
+    },
+  });
+}
+
+async function markDeliveredForAdmins(ioServer) {
+  const pending = await ChatMessage.find({
+    senderRole: "user",
+    deliveredToAdmin: { $ne: true },
+  })
+    .select("_id thread")
+    .lean();
+
+  if (!pending.length) return;
+
+  const ids = pending.map((message) => message._id);
+  const groupedByThread = pending.reduce((acc, message) => {
+    const key = message.thread.toString();
+    if (!acc.has(key)) acc.set(key, []);
+    acc.get(key).push(message._id.toString());
+    return acc;
+  }, new Map());
+
+  await ChatMessage.updateMany(
+    { _id: { $in: ids } },
+    {
+      $set: {
+        deliveredToAdmin: true,
+      },
+    },
+  );
+
+  const threads = await ChatThread.find({
+    _id: { $in: [...groupedByThread.keys()] },
+  })
+    .select("_id user")
+    .lean();
+
+  threads.forEach((thread) => {
+    emitChatUpdate(ioServer, {
+      threadId: thread._id,
+      userId: thread.user,
+      payload: {
+        type: "delivery",
+        recipientRole: "admin",
+        messageIds: groupedByThread.get(thread._id.toString()) || [],
+      },
+    });
+  });
+}
+
+async function resolveChatThreadAccess(threadId, userId, userRole) {
+  if (!threadId || !userId || !userRole) return null;
+
+  const thread = await ChatThread.findById(threadId).select("_id user").lean();
+  if (!thread) return null;
+
+  if (userRole === "admin") return thread;
+  if (thread.user?.toString() === userId) return thread;
+
+  return null;
+}
+
+io.on("connection", async (socket) => {
   const token = socket.handshake.auth?.token;
 
   if (token) {
     try {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await User.findById(payload.sub).select("name email role");
       socket.data.userId = payload.sub;
       socket.data.userRole = payload.role;
+      socket.data.userName =
+        currentUser?.name ||
+        currentUser?.email ||
+        (payload.role === "admin" ? "Quản trị viên" : "Người dùng");
 
       socket.join(`user:${payload.sub}`);
       if (payload.role === "admin") {
         socket.join("admins");
+        await markDeliveredForAdmins(io);
+      } else {
+        await markDeliveredForUser(io, payload.sub);
       }
     } catch (error) {
       console.warn("⚠️ Socket auth failed:", error.message);
@@ -143,6 +251,44 @@ io.on("connection", (socket) => {
   }
 
   console.log("🔌 Socket connected:", socket.id);
+
+  socket.on("chat:thread:join", async ({ threadId } = {}) => {
+    const thread = await resolveChatThreadAccess(
+      threadId,
+      socket.data.userId,
+      socket.data.userRole,
+    );
+    if (!thread) return;
+
+    socket.join(getThreadRoom(thread._id));
+  });
+
+  socket.on("chat:thread:leave", async ({ threadId } = {}) => {
+    const thread = await resolveChatThreadAccess(
+      threadId,
+      socket.data.userId,
+      socket.data.userRole,
+    );
+    if (!thread) return;
+
+    socket.leave(getThreadRoom(thread._id));
+  });
+
+  socket.on("chat:typing", ({ threadId, isTyping } = {}) => {
+    if (!threadId || typeof isTyping !== "boolean") return;
+
+    const room = getThreadRoom(threadId);
+    if (!socket.rooms.has(room)) return;
+
+    socket.to(room).emit("chat:typing", {
+      threadId,
+      isTyping,
+      senderRole: socket.data.userRole,
+      senderName:
+        socket.data.userName ||
+        (socket.data.userRole === "admin" ? "Quản trị viên" : "Người dùng"),
+    });
+  });
 
   socket.on("disconnect", () => {
     console.log("❌ Socket disconnected:", socket.id);

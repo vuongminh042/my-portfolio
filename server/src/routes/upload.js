@@ -63,6 +63,9 @@ router.post(
         stream.end(req.file.buffer);
       });
       const user = await User.findById(req.userId);
+      if (!user) {
+        return res.status(404).json({ message: "Không tìm thấy tài khoản admin" });
+      }
       user.avatar = result.secure_url;
       await user.save();
       const o = user.toObject();

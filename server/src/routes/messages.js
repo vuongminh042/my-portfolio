@@ -5,6 +5,14 @@ import { authRequired, adminOnly, optionalAuth } from '../middleware/auth.js';
 
 const router = Router();
 
+function normalizeText(value) {
+  return (typeof value === 'string' ? value : '').trim();
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
+}
+
 function emitAdminMessageUpdate(io) {
   io.to('admins').emit('admin:updated', { type: 'messages' });
 }
@@ -16,7 +24,10 @@ function emitUserMessageUpdate(io, userId, payload = {}) {
 
 router.post('/', optionalAuth, async (req, res, next) => {
   try {
-    const { name, email, subject, body } = req.body;
+    const name = normalizeText(req.body?.name);
+    const email = normalizeEmail(req.body?.email);
+    const subject = normalizeText(req.body?.subject);
+    const body = normalizeText(req.body?.body);
     if (!name || !email || !body) {
       return res.status(400).json({ message: 'Tên, email và nội dung là bắt buộc' });
     }
@@ -33,7 +44,7 @@ router.post('/', optionalAuth, async (req, res, next) => {
       user: linkedUser?._id || null,
       name: messageName,
       email: messageEmail,
-      subject: subject || '',
+      subject,
       body,
     });
 
@@ -126,7 +137,7 @@ router.patch('/mine/read-replies', authRequired, async (req, res, next) => {
 
 router.patch('/:id/reply', authRequired, adminOnly, async (req, res, next) => {
   try {
-    const replyBody = req.body.body?.trim();
+    const replyBody = normalizeText(req.body?.body);
     if (!replyBody) {
       return res.status(400).json({ message: 'Nội dung phản hồi là bắt buộc' });
     }

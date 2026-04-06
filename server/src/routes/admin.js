@@ -3,7 +3,10 @@ import Message from '../models/Message.js';
 import Project from '../models/Project.js';
 import Skill from '../models/Skill.js';
 import User from '../models/User.js';
+import ChatMessage from '../models/ChatMessage.js';
+import ChatThread from '../models/ChatThread.js';
 import { authRequired, adminOnly } from '../middleware/auth.js';
+import { emitChatUpdate } from '../lib/chatRealtime.js';
 
 const router = Router();
 
@@ -234,11 +237,33 @@ router.delete('/users/:id', async (req, res, next) => {
       });
     }
 
+    const chatThreads = await ChatThread.find({ user: target._id }).select('_id user').lean();
+    const chatThreadIds = chatThreads.map((thread) => thread._id);
+
+    if (chatThreadIds.length) {
+      await ChatMessage.deleteMany({
+        thread: { $in: chatThreadIds },
+      });
+      await ChatThread.deleteMany({
+        _id: { $in: chatThreadIds },
+      });
+    }
+
     await User.findByIdAndDelete(target._id);
 
     const io = req.app.get('io');
     if (io) {
       io.to('admins').emit('admin:updated', { type: 'users' });
+      chatThreads.forEach((thread) => {
+        emitChatUpdate(io, {
+          threadId: thread._id,
+          userId: target._id,
+          payload: {
+            type: 'deleted',
+            deleted: true,
+          },
+        });
+      });
     }
 
     res.json({ ok: true });

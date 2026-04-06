@@ -4,6 +4,20 @@ import { authRequired, adminOnly } from '../middleware/auth.js';
 
 const router = Router();
 
+function normalizeText(value) {
+  return (typeof value === 'string' ? value : '').trim();
+}
+
+function normalizeBoolean(value, fallback = true) {
+  if (typeof value === 'boolean') return value;
+
+  const normalized = normalizeText(value).toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+
+  return fallback;
+}
+
 router.get('/public', async (_req, res, next) => {
   try {
     const admin = await User.findOne({ role: 'admin' }).sort({ createdAt: 1 });
@@ -34,19 +48,19 @@ router.get('/public', async (_req, res, next) => {
 
 router.patch('/', authRequired, adminOnly, async (req, res, next) => {
   try {
-    const allowed = [
-      'name',
-      'title',
-      'bio',
-      'facebook',
-      'tiktok',
-      'avatar',
-      'backgroundMusicEnabled',
-    ];
     const updates = {};
-    for (const k of allowed) {
-      if (req.body[k] !== undefined) updates[k] = req.body[k];
+    const textFields = ['name', 'title', 'bio', 'facebook', 'tiktok', 'avatar'];
+
+    for (const field of textFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = normalizeText(req.body[field]);
+      }
     }
+
+    if (req.body.backgroundMusicEnabled !== undefined) {
+      updates.backgroundMusicEnabled = normalizeBoolean(req.body.backgroundMusicEnabled, true);
+    }
+
     const user = await User.findByIdAndUpdate(req.userId, updates, {
       new: true,
       runValidators: true,
