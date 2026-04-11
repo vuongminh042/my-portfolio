@@ -46,7 +46,7 @@ Production build: đặt `VITE_API_URL` trỏ tới domain API (xem `client/.env
 | Khu vực | Mô tả |
 |--------|--------|
 | Trang chủ | Hero, giới thiệu, kỹ năng, dự án, form liên hệ (lưu DB) |
-| Avatar | Ban đầu không ảnh → hiển thị chữ cái; sau khi admin upload avatar thì hiển thị ảnh |
+| Avatar | Ban đầu không ảnh → hiển thị chữ cái; khi đăng ký có thể upload avatar, admin vẫn có trang riêng để cập nhật ảnh |
 | Admin | Dashboard, hồ sơ + avatar, CRUD dự án (upload ảnh cover), CRUD kỹ năng, đọc/xóa tin nhắn |
 
 ## Cấu trúc thư mục

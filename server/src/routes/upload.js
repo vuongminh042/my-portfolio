@@ -21,20 +21,51 @@ if (!hasCloudinaryConfig) {
 }
 
 function imageFilter(_req, file, cb) {
-  if (/^image\/(jpeg|png|gif|webp)$/i.test(file.mimetype)) {
+  if (/^image\/(jpeg|png|gif|webp|avif)$/i.test(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Chỉ chấp nhận ảnh JPEG, PNG, GIF, WebP"));
+    cb(new Error("Chỉ chấp nhận ảnh JPEG, PNG, GIF, WebP, AVIF"));
   }
 }
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 3 * 1024 * 1024 },
+  limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: imageFilter,
 });
 
 const router = Router();
+
+async function uploadBufferToCloudinary(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        public_id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      },
+    );
+    stream.end(buffer);
+  });
+}
+
+router.post("/register-avatar", upload.single("avatar"), async (req, res, next) => {
+  try {
+    if (!hasCloudinaryConfig) {
+      return res.status(500).json({ message: "Thiếu cấu hình Cloudinary trên server" });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: "Không có file" });
+    }
+    const result = await uploadBufferToCloudinary(req.file.buffer, "avatars");
+    res.json({ avatar: result.secure_url });
+  } catch (e) {
+    next(e);
+  }
+});
 
 router.post(
   "/avatar",
@@ -49,22 +80,10 @@ router.post(
       if (!req.file) {
         return res.status(400).json({ message: "Không có file" });
       }
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: "avatars",
-            public_id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          },
-        );
-        stream.end(req.file.buffer);
-      });
+      const result = await uploadBufferToCloudinary(req.file.buffer, "avatars");
       const user = await User.findById(req.userId);
       if (!user) {
-        return res.status(404).json({ message: "Không tìm thấy tài khoản admin" });
+        return res.status(404).json({ message: "Không tìm thấy tài khoản" });
       }
       user.avatar = result.secure_url;
       await user.save();
@@ -90,19 +109,7 @@ router.post(
       if (!req.file) {
         return res.status(400).json({ message: "Không có file" });
       }
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: "projects",
-            public_id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          },
-        );
-        stream.end(req.file.buffer);
-      });
+      const result = await uploadBufferToCloudinary(req.file.buffer, "projects");
       res.json({ image: result.secure_url });
     } catch (e) {
       next(e);

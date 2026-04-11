@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../../api';
+import api, { assetUrl } from '../../api';
 import ConfirmModal from '../../components/ConfirmModal';
 import { socket } from '../../realtime';
 
@@ -88,11 +88,21 @@ export default function UsersAdmin() {
   }
 
   const filtered = data.list.filter((user) => {
-    const haystack = `${user.name || ''} ${user.email || ''} ${user.title || ''}`.toLowerCase();
+    const haystack = `${user.name || ''} ${user.email || ''}`.toLowerCase();
     const matchesSearch = haystack.includes(search.trim().toLowerCase());
     const matchesRole = role === 'all' || user.role === role;
     return matchesSearch && matchesRole;
   });
+
+  function userInitials(user) {
+    return (user.name || user.email || '?')
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => word[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  }
 
   return (
     <div>
@@ -158,7 +168,7 @@ export default function UsersAdmin() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Tìm theo tên, email hoặc chức danh"
+                  placeholder="Tìm theo tên hoặc email"
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 dark:border-white/10 dark:bg-surface-900/80 dark:text-white"
                 />
               </label>
@@ -194,9 +204,9 @@ export default function UsersAdmin() {
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-100/80 text-left text-slate-600 dark:bg-white/5 dark:text-slate-400">
                   <tr>
+                    <th className="px-5 py-4 font-medium">Ảnh</th>
                     <th className="px-5 py-4 font-medium">Người dùng</th>
                     <th className="px-5 py-4 font-medium">Email</th>
-                    <th className="px-5 py-4 font-medium">Chức danh</th>
                     <th className="px-5 py-4 font-medium">Vai trò</th>
                     <th className="px-5 py-4 font-medium">Ngày đăng ký</th>
                     <th className="px-5 py-4 font-medium">Thao tác</th>
@@ -209,15 +219,29 @@ export default function UsersAdmin() {
                       className="border-t border-slate-200/80 dark:border-white/10"
                     >
                       <td className="px-5 py-4">
+                        <div className="flex items-center">
+                          <div className="h-11 w-11 overflow-hidden rounded-full border border-slate-200 bg-gradient-to-br from-slate-200 via-white to-cyan-100 dark:border-white/10 dark:from-[#162032] dark:via-[#0f172a] dark:to-[#0e7490]">
+                            {user.avatar ? (
+                              <img
+                                src={assetUrl(user.avatar)}
+                                alt={user.name || user.email || 'Avatar'}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-xs font-bold text-cyan-700 dark:text-accent-glow/90">
+                                {userInitials(user)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
                         <p className="font-medium text-slate-900 dark:text-white">
                           {user.name || 'Chưa cập nhật tên'}
                         </p>
                       </td>
                       <td className="px-5 py-4 text-slate-600 dark:text-slate-400">
                         {user.email}
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-400">
-                        {user.title || 'Chưa cập nhật'}
                       </td>
                       <td className="px-5 py-4">
                         <span

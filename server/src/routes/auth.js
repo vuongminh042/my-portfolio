@@ -29,6 +29,7 @@ router.post('/register', async (req, res, next) => {
     const email = normalizeEmail(req.body?.email);
     const password = String(req.body?.password || '');
     const name = normalizeName(req.body?.name);
+    const avatar = normalizeName(req.body?.avatar);
     if (!email || !password) {
       return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
     }
@@ -48,6 +49,7 @@ router.post('/register', async (req, res, next) => {
       email,
       password: hash,
       name,
+      avatar,
       role,
     });
 

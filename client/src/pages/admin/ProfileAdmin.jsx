@@ -2,6 +2,15 @@ import { useEffect, useState } from 'react';
 import api, { assetUrl } from '../../api';
 import AvatarDisplay from '../../components/AvatarDisplay';
 
+const MAX_AVATAR_SIZE = 8 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/avif',
+]);
+
 export default function ProfileAdmin() {
   const [form, setForm] = useState({
     name: '',
@@ -62,6 +71,19 @@ export default function ProfileAdmin() {
   async function onAvatarChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
+      setMsg({ type: 'err', text: 'Ảnh đại diện chỉ hỗ trợ JPEG, PNG, GIF, WebP hoặc AVIF.' });
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_SIZE) {
+      setMsg({ type: 'err', text: 'Ảnh đại diện phải nhỏ hơn 8MB.' });
+      e.target.value = '';
+      return;
+    }
+
     setUploading(true);
     setMsg(null);
     try {
@@ -102,7 +124,7 @@ export default function ProfileAdmin() {
           <label className="mt-4 inline-flex cursor-pointer items-center gap-2 px-4 py-2 rounded-xl bg-slate-200/90 text-sm text-slate-800 hover:bg-slate-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/15">
             <input
               type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
+              accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
               className="sr-only"
               onChange={onAvatarChange}
               disabled={uploading}

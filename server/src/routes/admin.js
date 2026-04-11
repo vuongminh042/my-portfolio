@@ -127,7 +127,7 @@ router.get('/overview', async (_req, res, next) => {
       User.find()
         .sort({ createdAt: -1 })
         .limit(8)
-        .select('name email role title createdAt'),
+        .select('name email role avatar createdAt'),
       Message.find()
         .sort({ createdAt: -1 })
         .limit(6)
@@ -202,7 +202,7 @@ router.get('/users', async (_req, res, next) => {
     const [list, total, admins, today, thisWeek] = await Promise.all([
       User.find()
         .sort({ createdAt: -1 })
-        .select('name email role title createdAt'),
+        .select('name email role avatar createdAt'),
       User.countDocuments(),
       User.countDocuments({ role: 'admin' }),
       User.countDocuments({ createdAt: { $gte: todayStart } }),

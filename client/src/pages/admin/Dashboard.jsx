@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../api';
+import api, { assetUrl } from '../../api';
 import { socket } from '../../realtime';
 
 const EMPTY_DATA = {
@@ -27,6 +27,16 @@ const EMPTY_DATA = {
   recentUsers: [],
   recentMessages: [],
 };
+
+function userInitials(user) {
+  return (user.name || user.email || '?')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 function SummaryCard({ label, value, tone, subtext, to }) {
   const card = (
@@ -379,18 +389,28 @@ export default function Dashboard() {
                     key={user._id}
                     className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 px-4 py-3 dark:border-white/10"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-slate-900 dark:text-white">
-                        {user.name || 'Chưa cập nhật tên'}
-                      </p>
-                      <p className="truncate text-sm text-slate-600 dark:text-slate-400">
-                        {user.email}
-                      </p>
-                      {user.title && (
-                        <p className="truncate text-xs text-slate-500 dark:text-slate-500">
-                          {user.title}
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-gradient-to-br from-slate-200 via-white to-cyan-100 dark:border-white/10 dark:from-[#162032] dark:via-[#0f172a] dark:to-[#0e7490]">
+                        {user.avatar ? (
+                          <img
+                            src={assetUrl(user.avatar)}
+                            alt={user.name || user.email || 'Avatar'}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-cyan-700 dark:text-accent-glow/90">
+                            {userInitials(user)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-slate-900 dark:text-white">
+                          {user.name || 'Chưa cập nhật tên'}
                         </p>
-                      )}
+                        <p className="truncate text-sm text-slate-600 dark:text-slate-400">
+                          {user.email}
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right">
                       <span
